@@ -1,3 +1,5 @@
+# uses debian stertch-slim
+# https://github.com/nginxinc/docker-nginx/blob/master/stable/stretch/Dockerfile
 FROM nginx:stable
 
 # Remove default configuration from Nginx
