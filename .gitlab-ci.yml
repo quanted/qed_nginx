@@ -3,6 +3,9 @@ stages:
   - Image Scan
   - Application Scan
 
+include:  
+  - remote: 'https://gitlab.com/prismacloud-public/shift-left/extension/-/raw/master/.pcs.gitlab-ci.yml'
+
 Build Image:
   stage: Build
   tags:
