@@ -1,0 +1,79 @@
+name: Create and publish a Docker image
+
+on: push
+
+env:
+  REGISTRY: ghcr.io
+  NGINX_IMAGE: quanted/qed-nginx
+
+jobs:
+
+  build-nginx-ceam:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: build-angular
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE }}
+          tags: |
+            type=raw,value=ceam
+
+      - name: Build and push Cyanweb Nginx Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: docker/nginx/Dockerfile
+          build-args: config=nginx_gdit_aws_ssl_full_dev.conf
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-nginx-epa:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: build-angular
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE }}
+          tags: |
+            type=raw,value=epa
+
+      - name: Build and push Cyanweb Nginx Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: docker/nginx/Dockerfile
+          build-args: config=nginx_epa_aws_ssl.conf
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
