@@ -1,36 +1,49 @@
 stages:
-  - Build
-  - Image Scan
-  - Application Scan
+  - Image Copy
+  # - Build
+  # - Image Scan
+  # - Application Scan
 
-Build Image:
-  stage: Build
+Copy Images:
+  stage: Image Copy
   tags:
-    - devsecops-instance
+    - qed-stg-runner
+  when: manual
   image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
   script:
-    - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg config=nginx_epa_aws_kube.conf --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-  
-Prisma:
-  stage: Image Scan
-  tags:
-    - devsecops-instance
-  when: manual
-  image: docker:20.10
-  # This needs a TwistCLI image based on a Docker base image.
-  script:
-    - echo "Simulate a Prisma scan."
+    - crane auth login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - crane copy "ghcr.io/quanted/qed-nginx:epa" "$CI_REGISTRY_IMAGE/qed-nginx:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
 
-NetSparker:
-  stage: Application Scan
-  tags:
-    - devsecops-instance
-  when: manual
-  image: docker:20.10
-  # This needs a NetSparker image to invoke the scan.
-  script:
-    - echo "Simulate a NetSparker scan."
+# Build Image:
+#   stage: Build
+#   tags:
+#     - devsecops-instance
+#   image:
+#     name: gcr.io/kaniko-project/executor:debug
+#     entrypoint: [""]
+#   script:
+#     - mkdir -p /kaniko/.docker
+#     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+#     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg config=nginx_epa_aws_kube.conf --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+  
+# Prisma:
+#   stage: Image Scan
+#   tags:
+#     - devsecops-instance
+#   when: manual
+#   image: docker:20.10
+#   # This needs a TwistCLI image based on a Docker base image.
+#   script:
+#     - echo "Simulate a Prisma scan."
+
+# NetSparker:
+#   stage: Application Scan
+#   tags:
+#     - devsecops-instance
+#   when: manual
+#   image: docker:20.10
+#   # This needs a NetSparker image to invoke the scan.
+#   script:
+#     - echo "Simulate a NetSparker scan."
